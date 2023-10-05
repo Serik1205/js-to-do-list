@@ -1,4 +1,23 @@
 export class Todo {
+	static #NAME = 'todo'
+
+	static #saveData = () => {
+		localStorage.setItem(
+			this.#NAME,
+			JSON.stringify({
+				list: this.#list,
+				count: this.#count,
+			}),
+		)
+	}
+	static #loadData = () => {
+		const data = localStorage.getItem(this.#NAME)
+		if (data) {
+			const { list, count } = JSON.parse(data)
+			this.#list = list
+			this.#count = count
+		}
+	}
 	static #list = []
 	static #count = 0
 	static #createTaskData = (text) => {
@@ -21,6 +40,7 @@ export class Todo {
 		this.#button = document.querySelector('.form__button')
 		this.#button.onclick = this.#handleAdd
 		this.#render()
+		this.#loadData()
 
 	}
 	static #handleAdd = () => {
@@ -28,11 +48,70 @@ export class Todo {
 		if (value.length > 1) {
 			this.#createTaskData(value)
 			this.#input.value = ''
-			this.#render
+			this.#render()
+			this.#saveData()
 		}
 		console.log(this.#list);
 	}
-	static #render = () => { }
+	static #render = () => {
+		this.#block.innerHTML = ''
+
+		if (this.#list.length === 0) {
+			this.#block.innerText = 'Список задач пустий'
+		} else {
+			this.#list.forEach((taskData) => {
+				const el = this.#createTaskElem(taskData)
+				this.#block.append(el)
+			})
+		}
+	}
+	static #createTaskElem = (data) => {
+		const el = this.#template.cloneNode(true)
+		const [id, text, btnDo, btnCancel] = el.children
+		id.innerText = `${data.id}.`
+		text.innerText = data.text
+		btnCancel.onclick = this.#handleCancel(data)
+		btnDo.onclick = this.#handleDo(data, btnDo, el)
+		if (data.done) {
+			el.classList.add('task--done')
+			btn.classList.remove('task__button--do')
+			btn.classList.add('task__button--done')
+		}
+		return el
+	}
+	static #handleDo = (data, btn, el) => () => {
+		const result = this.#toggleDone(data.id)
+		if (result === true || result === false) {
+			el.classList.#toggleDone('task--done')
+			btn.classList.#toggleDone('task__button--do')
+			btn.classList.#toggleDone('task__button--done')
+			this.#saveData()
+		}
+	}
+	static #toggleDone = (id) => {
+		this.#list = this.#list.find((item) => item.id !== id)
+		if (task) {
+			task.done = !task.done
+			return task.done
+		} else {
+			return null
+		}
+	}
+
+	static #handleCancel = (data) => () => {
+		if (confirm('Видалити задачу')) {
+			const result = this.#deleteById(data.id)
+			if (result) {
+				this.#render()
+				this.#saveData()
+			}
+		}
+
+	}
+	static #deleteById = (id) => {
+		this.#list = this.#list.filter((item) => item.id !== id)
+		return true
+	}
 }
 Todo.init()
 window.todo = Todo
